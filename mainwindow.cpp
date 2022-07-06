@@ -91,7 +91,7 @@ char* MainWindow::generate_random(int memSize, int blastRadius) {
     buffer[0] = 0x33; //blastman
     *(int*)&buffer[1] = blastRadius; //how many times to repeat the corruption
 
-    for (int i=5; blast_repeated != blastRadius; i++){
+    for (int i=5; blast_repeated != blastRadius; i += 5){
       *(int*)&buffer[i] = i - 5; //address
       buffer[i+4] = 0; //byte
       ++blast_repeated;
