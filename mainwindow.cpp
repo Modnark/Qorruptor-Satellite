@@ -99,7 +99,6 @@ char* MainWindow::generate_random(int memSize, int blastRadius) {
 
     return buffer;
 }
-
 // Send the corruption packet
 void MainWindow::on_corruptButton_clicked()
 {
