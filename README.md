@@ -3,6 +3,7 @@ QT-Based corruption client
 
 # Features
 Currently only supports the 86-box fork created by me and my friend NT_x86.
+
 You can choose a range of bytes to corrupt
 
 # Credits
