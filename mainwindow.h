@@ -33,10 +33,24 @@ private slots:
     void on_Socket_Error();
     void on_corruptButton_clicked();
 
+    void on_BlastRadiusNumberBox_valueChanged(int arg1);
+
+    void on_BlastRangeEnabled_stateChanged(int arg1);
+
+    void on_AddressRangeStart_valueChanged(int arg1);
+
+    void on_AddressRangeEnd_valueChanged(int arg1);
+
 private:
     Ui::MainWindow *ui;
     int BlastRadius = 0;
     int MemSize = 0;
+    int StartingAddress = 0;
+    int EndingAddress = 0;
+
+    bool BlastByRange = false;
+    int AddressRangeStart = 0;
+    int AddressRangeEnd = 0;
     QTcpSocket* socket;
 
     void toggle_ui_elements(bool visible);

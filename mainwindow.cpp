@@ -1,6 +1,8 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
 
+static inline QByteArray IntToArray(qint32 source);
+
 // Constructor
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -28,6 +30,21 @@ void MainWindow::toggle_ui_elements(bool visible) {
     ui->corruptButton->setEnabled(visible);
     ui->BlastRadiusSlider->setEnabled(visible);
     ui->BlastRadiusNumberBox->setEnabled(visible);
+
+    if(this->BlastByRange == true) {
+        ui->AddressRangeStart->setEnabled(visible);
+        ui->AddressRangeEnd->setEnabled(visible);
+    }
+
+    ui->BlastRangeEnabled->setEnabled(visible);
+
+    // Temporary limitation
+    int TempMemSize = this->MemSize;
+    if(TempMemSize > 1000)
+        TempMemSize = 1000;
+
+    ui->BlastRadiusSlider->setMaximum(TempMemSize);
+    ui->BlastRadiusNumberBox->setMaximum(TempMemSize);
 }
 
 // Change the values of the blast radius
@@ -55,11 +72,11 @@ void MainWindow::on_Action_ConnectToServer() {
         socket->waitForBytesWritten();
         socket->waitForReadyRead(1000);
         this->MemSize = socket->readAll().toInt();
+        ui->AddressRangeStart->setRange(0, this->MemSize);
+        ui->AddressRangeEnd->setRange(0, this->MemSize);
 
         ui->statusBar->showMessage(QString("Connected to server"));
         toggle_ui_elements(true);
-
-
     } else {
         QMessageBox::critical(this, "Qorruptor Satellite", QString("Failed to connect to server because %1").arg(socket->errorString()));
         ui->statusBar->showMessage(socket->errorString());
@@ -84,17 +101,21 @@ void MainWindow::on_Socket_Error() {
 
 }
 
-// Generates the blast to send to the server
+// Generates the blast packet to send to the server
 char* MainWindow::generate_random(int memSize, int blastRadius) {
+    srand(time(NULL));
     char* buffer = new char[5005];
     unsigned int blast_repeated = 0;
     buffer[0] = 0x33; //blastman
     *(int*)&buffer[1] = blastRadius; //how many times to repeat the corruption
 
     for (int i=5; blast_repeated != blastRadius; i += 5){
-      *(int*)&buffer[i] = i - 5; //address
-      buffer[i+4] = 0; //byte
-      ++blast_repeated;
+        if(this->BlastByRange)
+            *(int*)&buffer[i] = rand() % (this->AddressRangeEnd - this->AddressRangeStart) + this->AddressRangeStart;
+        else
+            *(int*)&buffer[i] = rand() % memSize;
+        buffer[i+4] = rand() % 0xFF; //byte
+        ++blast_repeated;
     }
 
     return buffer;
@@ -116,3 +137,31 @@ void MainWindow::on_corruptButton_clicked()
         QMessageBox::critical(this, "Qorruptor Satellite", QString("You are not connected to the server."));
     }
 }
+
+void MainWindow::on_BlastRadiusNumberBox_valueChanged(int value)
+{
+    this->BlastRadius = value;
+    ui->BlastRadiusSlider->setValue(value);
+}
+
+
+// Toggle blast range on or off
+void MainWindow::on_BlastRangeEnabled_stateChanged(int value)
+{
+    this->BlastByRange = (bool)value;
+    ui->AddressRangeStart->setEnabled(this->BlastByRange);
+    ui->AddressRangeEnd->setEnabled(this->BlastByRange);
+}
+
+void MainWindow::on_AddressRangeStart_valueChanged(int value)
+{
+    this->AddressRangeStart = value;
+    ui->AddressRangeEnd->setRange(this->AddressRangeStart, this->MemSize);
+}
+
+
+void MainWindow::on_AddressRangeEnd_valueChanged(int value)
+{
+    this->AddressRangeEnd = value;
+}
+
